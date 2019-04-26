@@ -7,8 +7,8 @@
 
 using namespace std;
 
-//#define host "127.0.0.1"
-char* host = "localhost";
+char* host = "185.230.162.203";
+//char* host = "localhost";
 //#define port 1883
 #define qos 0
 #define retain true
@@ -24,7 +24,7 @@ static bool connect_To_Broker(){
 		return false;
 	}
 
-	mosq = mosquitto_new( 
+	mosq = mosquitto_new(
 		ID,
   		true,
   		0

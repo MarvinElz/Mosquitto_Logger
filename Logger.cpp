@@ -1,36 +1,26 @@
 #include <mosquitto.h>
+ 
+#include <unistd.h>
 
 #define ID "ID_Analyse"
 
 #include "Comm_Config.h"
 
+#include <iostream>
 
 void message_callback(struct mosquitto *mosq, void *obj, const struct mosquitto_message *message){
 	bool match = false;
-	mosquitto_topic_matches_sub("/Sensor/Raw_Data", message->topic, &match);
-	if (match) {
-    json j = json::parse(message->data);
-    cout << "TimeStamp:" << j["TimeStamp"].get<uint>();
-    cout << "DataLength:" << j["DataLength"].get<uint>();
-    //j["Data"]
-		return;
-	}
-
-	match = false;
-	mosquitto_topic_matches_sub("/Analyse/Config", message->topic, &match);
-	if (match) {
-		if( message->payloadlen != sizeof(Sensor_Config)  ){
-			std::cout << "Diskrepanz zwischen payloadlen{" << message->payloadlen << "} und sizeof(Analyse_Config){(}" << sizeof(Analyse_Config) << "}" << std::endl;
-		}else{
-			memcpy ( &analyse_config, message->payload, Analyse_Config );
-		}
-		return;
-	}
+	//mosquitto_topic_matches_sub("/Sensor/Raw_Data", message->topic, &match);
+	//if (match) {
+	// TODO:
+	//	return;
+	//}
+	std::cout << "Nachricht empfangen." << std::endl;
 }
 
 
 int main(){
-	
+
 	// Connect to Broker
 	if (connect_To_Broker())
 		std::cout << "Verbindung zu Broker hergestellt" << std::endl;
@@ -40,31 +30,19 @@ int main(){
 		return -1;
 	}
 
+	std::cout << mosquitto_username_pw_set( mosq, "Marvin", "Standard" ) << std::endl;
+
 	// Subscribe to "/Sensor/Raw_Data"
 	int rc = mosquitto_subscribe( 	mosq,
 									NULL,
-									"/Sensor/Raw_Data",
+									"Test",
 									qos	);
 	if( rc == MOSQ_ERR_SUCCESS )
 		std::cout << "mosquitto_subscribe erfolgreich" << std::endl;
 	else{
 		std::cout << "mosquitto_subscribe nicht erfolgreich" << std::endl;
-		return false;
+		return -1;
 	}
-
-	// Subscribe to "/Analyse/Config"
-	rc = mosquitto_subscribe( 	mosq,
-									NULL,
-									"/Analyse/Config",
-									qos	);
-	if( rc == MOSQ_ERR_SUCCESS )
-		std::cout << "mosquitto_subscribe erfolgreich" << std::endl;
-	else{
-		std::cout << "mosquitto_subscribe nicht erfolgreich" << std::endl;
-		return false;
-	}
-
-	
 
 
 	// Callback setzen
@@ -76,19 +54,17 @@ int main(){
 		std::cout << "mosquitto_loop_start erfolgreich" << std::endl;
 	else{
 		std::cout << "mosquitto_loop_start nicht erfolgreich" << std::endl;
-		// return false;
+		return -1;
 	}
-	
-		
+
+
 	////////////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////  MQTT Init abgeschlossen  /////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////////
 
 	while(true){
-	
-		if( raw_data_length == 0){
-			usleep(1000);		// 1 Millisekunde schlafen
-			continue;
-		}
+		usleep(1000000);		// 1 Millisekunde schlafen
+		std::cout << mosquitto_publish( mosq, NULL, "Test", 6, "Test", 2, true ) << std::endl;
+	}
 
 }
